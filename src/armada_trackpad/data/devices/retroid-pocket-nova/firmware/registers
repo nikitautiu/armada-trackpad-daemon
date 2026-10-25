@@ -1,0 +1,11 @@
+# Touchscreen registers the driver loses on every suspend, written by armada-trackpad-firmware.service at
+# boot and after each resume (docs/design.md, "Touchscreen firmware"). One line each:
+# driver, register (lowercase 0xnn), decimal value 0..255.
+#
+# FT5452 touch threshold: 35, from the firmware's 50, so light touches register sooner. On resume the
+# driver first writes back its own cached threshold, so for the ~0.4 s until this unit runs it is 50,
+# and sysfs `threshold` keeps showing the driver's cache, not 35.
+edt_ft5x06 0x80 35
+# FT5452 move threshold (THDIFF): 64, from the firmware's 128. The touch-down hold at common swipe speeds
+# halves, 50 -> 25 ms; meant for Steam Input's smoothing lowered and acceleration off.
+edt_ft5x06 0x85 64

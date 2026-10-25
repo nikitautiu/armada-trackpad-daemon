@@ -1,0 +1,274 @@
+# armada-trackpad-daemon: the left virtual pad's tap outputs (tap_output.py). The pad click
+# is KEY_F24 + ABS_MISC, delivered as a left pad press with force (Steam ignores a pad press
+# without force). Every other output is one KEY_MACRO key, a Deck button, plus for the triggers an
+# analog axis (ABS_VOLUME left, ABS_PROFILE right). tests/test_tap_output.py keeps this in sync.
+version: 2
+kind: CapabilityMap
+name: Armada trackpad left pad click
+id: armada_trackpad_left
+
+mapping:
+  - name: Tap to LeftPad press
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_F24
+          value_type: button
+    target_event:
+      touchpad:
+        name: LeftPad
+        touch:
+          button: Press
+
+  - name: Tap force to LeftPad force
+    source_events:
+      - evdev:
+          event_type: ABS
+          event_code: ABS_MISC
+          value_type: trigger
+    target_event:
+      gamepad:
+        trigger:
+          name: LeftTouchpadForce
+
+  - name: Tap output a to South
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO1
+          value_type: button
+    target_event:
+      gamepad:
+        button: South
+
+  - name: Tap output b to East
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO2
+          value_type: button
+    target_event:
+      gamepad:
+        button: East
+
+  - name: Tap output x to West
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO3
+          value_type: button
+    target_event:
+      gamepad:
+        button: West
+
+  - name: Tap output y to North
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO4
+          value_type: button
+    target_event:
+      gamepad:
+        button: North
+
+  - name: Tap output dpad_up to DPadUp
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO5
+          value_type: button
+    target_event:
+      gamepad:
+        button: DPadUp
+
+  - name: Tap output dpad_down to DPadDown
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO6
+          value_type: button
+    target_event:
+      gamepad:
+        button: DPadDown
+
+  - name: Tap output dpad_left to DPadLeft
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO7
+          value_type: button
+    target_event:
+      gamepad:
+        button: DPadLeft
+
+  - name: Tap output dpad_right to DPadRight
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO8
+          value_type: button
+    target_event:
+      gamepad:
+        button: DPadRight
+
+  - name: Tap output l1 to LeftBumper
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO9
+          value_type: button
+    target_event:
+      gamepad:
+        button: LeftBumper
+
+  - name: Tap output r1 to RightBumper
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO10
+          value_type: button
+    target_event:
+      gamepad:
+        button: RightBumper
+
+  - name: Tap output l3 to LeftStick
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO11
+          value_type: button
+    target_event:
+      gamepad:
+        button: LeftStick
+
+  - name: Tap output r3 to RightStick
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO12
+          value_type: button
+    target_event:
+      gamepad:
+        button: RightStick
+
+  - name: Tap output l4 to LeftPaddle1
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO13
+          value_type: button
+    target_event:
+      gamepad:
+        button: LeftPaddle1
+
+  - name: Tap output l5 to LeftPaddle2
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO14
+          value_type: button
+    target_event:
+      gamepad:
+        button: LeftPaddle2
+
+  - name: Tap output r4 to RightPaddle1
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO15
+          value_type: button
+    target_event:
+      gamepad:
+        button: RightPaddle1
+
+  - name: Tap output r5 to RightPaddle2
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO16
+          value_type: button
+    target_event:
+      gamepad:
+        button: RightPaddle2
+
+  - name: Tap output view to Select
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO17
+          value_type: button
+    target_event:
+      gamepad:
+        button: Select
+
+  - name: Tap output menu to Start
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO18
+          value_type: button
+    target_event:
+      gamepad:
+        button: Start
+
+  - name: Tap output steam to Guide
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO19
+          value_type: button
+    target_event:
+      gamepad:
+        button: Guide
+
+  - name: Tap output qam to QuickAccess
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO20
+          value_type: button
+    target_event:
+      gamepad:
+        button: QuickAccess
+
+  - name: Tap output l2_full to LeftTrigger
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO21
+          value_type: button
+    target_event:
+      gamepad:
+        button: LeftTrigger
+
+  - name: Tap output r2_full to RightTrigger
+    source_events:
+      - evdev:
+          event_type: KEY
+          event_code: KEY_MACRO22
+          value_type: button
+    target_event:
+      gamepad:
+        button: RightTrigger
+
+  - name: Tap output trigger axis to LeftTrigger
+    source_events:
+      - evdev:
+          event_type: ABS
+          event_code: ABS_VOLUME
+          value_type: trigger
+    target_event:
+      gamepad:
+        trigger:
+          name: LeftTrigger
+
+  - name: Tap output trigger axis to RightTrigger
+    source_events:
+      - evdev:
+          event_type: ABS
+          event_code: ABS_PROFILE
+          value_type: trigger
+    target_event:
+      gamepad:
+        trigger:
+          name: RightTrigger

@@ -1,0 +1,17 @@
+[Unit]
+Description=Touchscreen as Steam Deck trackpads (armada-trackpad-daemon)
+Documentation=https://github.com/nikitautiu/armada-trackpad-daemon
+# Lives and dies with Steam's game-mode session, like Armada's own armada-powerbuttond.
+PartOf=gamescope-session-plus@steam.service
+After=gamescope-session-plus@steam.service
+
+[Service]
+ExecStart=%h/.local/share/armada-trackpad-daemon/.venv/bin/armada-trackpadd
+Restart=on-failure
+RestartSec=2
+# 78 = unsupported hardware: restarting would not help.
+RestartPreventExitStatus=78
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=gamescope-session-plus@steam.service

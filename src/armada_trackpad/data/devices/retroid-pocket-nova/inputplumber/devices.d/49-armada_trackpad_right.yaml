@@ -1,0 +1,28 @@
+# armada-trackpad-daemon: composite for the right trackpad.
+# Its only source is the daemon's right virtual pad. The daemon attaches the Nova composite's
+# Steam Deck controller to it (AttachTargetDevice) and loads profiles/armada_trackpad_right.yaml.
+# No target_devices: it must never create a controller of its own.
+# persist: without it, the composite would stop when the daemon exits and take the shared
+# controller down with it.
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ShadowBlip/InputPlumber/main/rootfs/usr/share/inputplumber/schema/composite_device_v1.json
+version: 1
+kind: CompositeDevice
+name: Armada Trackpad Right
+
+options:
+  auto_manage: true
+  persist: true
+
+matches:
+  - udev:
+      sys_path: /sys/firmware/devicetree/base
+      attributes:
+        - name: compatible
+          value: retroidpocket,rpnova
+
+source_devices:
+  - group: touchscreen
+    capability_map_id: armada_trackpad_right
+    evdev:
+      name: "Armada Trackpad Right"
+      handler: event*

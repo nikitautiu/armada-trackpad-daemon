@@ -1,0 +1,121 @@
+[project]
+name = "armada-trackpad-daemon"
+version = "0.2.0"
+description = "Turns a handheld's touchscreen into Steam Deck trackpads for Steam Input on Armada OS"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+authors = [{ name = "Nikita Utiu", email = "nikita.utiu@gmail.com" }]
+dependencies = [
+    "python-xlib>=0.33",
+]
+
+[project.scripts]
+armada-trackpadd = "armada_trackpad.daemon:main"
+armada-trackpadctl = "armada_trackpad.cli:main"
+
+[dependency-groups]
+dev = [
+    "mypy>=2.4.0",
+    "pytest>=8",
+    "ruff>=0.6",
+    "shellcheck-py>=0.11.0.1",
+    "types-python-xlib>=0.33.0.20261006",
+]
+
+[build-system]
+requires = ["uv_build>=0.8,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "armada_trackpad"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "C90", "I", "N", "UP", "S", "BLE", "B", "A", "C4", "PL", "TCH", "RUF", "TID", "D"]
+# Google style documents constructor arguments in the class docstring, so `__init__` needs none.
+ignore = ["D107"]
+
+[tool.ruff.lint.per-file-ignores]
+# pytest asserts with plain `assert`. Expected values in assertions are the point of a test, not magic numbers.
+"tests/**" = ["S101", "PLR2004"]
+# Device scripts start the daemon and systemctl, with fixed arguments, like a shell script would.
+"tests/device/**" = ["S603", "S607"]
+# Dev probes run on the device like the device tests, and assert what they measured.
+"dev/**" = ["S101", "S603", "S607"]
+# Runs shellcheck and the shipped scripts, with fixed arguments.
+"tests/test_shell_scripts.py" = ["S603"]
+# Runs `devices.py` as the root step does, with fixed arguments.
+"tests/test_devices.py" = ["S603"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+
+[tool.mypy]
+strict = true
+files = ["src", "tests", "dev"]
+# `dev/latency_probe.py` imports the device test's helpers.
+mypy_path = "tests/device"
+
+[[tool.mypy.overrides]]
+# Tests stay typed (every def annotated) but skip the strict checks that only fight fakes and pytest.
+# Test modules are top-level (no package), and mypy patterns cannot glob part of a name: list each one.
+module = [
+    "conftest",
+    "e2e_hid",
+    "fakes",
+    "test_chord",
+    "test_cli",
+    "test_control",
+    "test_daemon",
+    "test_devices",
+    "test_evdev",
+    "test_focus",
+    "test_geometry",
+    "test_inputplumber",
+    "test_mapper",
+    "test_modes",
+    "test_settings",
+    "test_shell_scripts",
+    "test_stats",
+    "test_tap_output",
+    "test_togglekey",
+    "test_tracker",
+    "test_trackpad",
+    "test_uinput_output",
+]
+# Tests spy on methods by replacing them.
+disable_error_code = ["method-assign"]
+disallow_any_generics = false
+disallow_subclassing_any = false
+disallow_untyped_calls = false
+disallow_untyped_decorators = false
+strict_equality = false
+warn_return_any = false
+
+[[tool.mypy.overrides]]
+# The same for the behaviour pin, which stays byte-for-byte unchanged, so its fakes go in uncast.
+module = ["test_pad_sequence"]
+disable_error_code = ["arg-type", "method-assign"]
+disallow_any_generics = false
+disallow_subclassing_any = false
+disallow_untyped_calls = false
+disallow_untyped_decorators = false
+strict_equality = false
+warn_return_any = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Shared fakes are a plain module (`tests/fakes.py`), imported by name like any other.
+pythonpath = ["tests"]
+addopts = "-q"

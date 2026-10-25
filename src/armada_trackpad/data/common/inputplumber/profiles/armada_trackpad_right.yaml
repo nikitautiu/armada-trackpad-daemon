@@ -1,0 +1,15 @@
+# armada-trackpad-daemon: loaded on the right pad composite; its only source is the right virtual pad.
+# No target_devices key: setting targets there could stop the shared Steam Deck controller.
+version: 1
+kind: DeviceProfile
+name: Armada Trackpad (right pad)
+mapping:
+- name: Right virtual pad to right trackpad
+  source_event:
+    touchscreen:
+      motion: {}
+  target_events:
+  - touchpad:
+      name: RightPad
+      touch:
+        motion: {}

@@ -1,0 +1,30 @@
+[Unit]
+Description=Touchscreen registers the driver loses on suspend (armada-trackpad-daemon)
+Documentation=https://github.com/nikitautiu/armada-trackpad-daemon
+# The driver cuts the controller's power on every suspend and restores only some registers, so this
+# runs at boot and again once the system is back from each sleep.
+After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
+
+[Service]
+# No RemainAfterExit: the unit must be inactive again, so the next sleep starts it once more.
+Type=oneshot
+ExecStart=/etc/armada-trackpad/firmware.sh /etc/armada-trackpad/registers
+TimeoutStartSec=30
+NoNewPrivileges=yes
+PrivateNetwork=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+RestrictAddressFamilies=AF_UNIX
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+RestrictRealtime=yes
+SystemCallArchitectures=native
+# i2cget and i2cset open /dev/i2c-N, the "i2c" character devices; no other device is reachable.
+DevicePolicy=closed
+DeviceAllow=char-i2c rw
+
+[Install]
+WantedBy=multi-user.target suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target

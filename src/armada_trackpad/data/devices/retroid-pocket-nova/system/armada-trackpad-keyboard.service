@@ -1,0 +1,32 @@
+[Unit]
+Description=Keyboard output of the device's InputPlumber composite (armada-trackpad-daemon)
+Documentation=https://github.com/nikitautiu/armada-trackpad-daemon
+# Armada's controller-type unit resets the composite's outputs at boot and after every InputPlumber
+# restart, and drops the keyboard when it reads the outputs too early. This runs after it, and before
+# the session, so Steam and the daemon start with the controller already final.
+Requires=inputplumber.service
+After=inputplumber.service armada-controller-type.service
+Before=display-manager.service
+
+[Service]
+# Stays active, so an InputPlumber restart restarts it through Requires=, after Armada's unit again.
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/etc/armada-trackpad/keyboard.sh /etc/armada-trackpad/composite
+TimeoutStartSec=30
+NoNewPrivileges=yes
+# The system bus is a path socket, which a private network namespace still reaches.
+PrivateNetwork=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+RestrictAddressFamilies=AF_UNIX
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+RestrictRealtime=yes
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target
