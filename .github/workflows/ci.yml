@@ -32,3 +32,16 @@ jobs:
       - run: uv run ruff check
       - run: uv run ruff format --check src tests dev
       - run: uv run mypy
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      # The image scripts/vale.sh runs locally; styles come from the Packages URL in .vale.ini.
+      - name: Vale
+        run: |
+          image="$(sed -n 's/^IMAGE="\(.*\)"$/\1/p' scripts/vale.sh)"
+          docker run --rm -v "$PWD:/work" -w /work "$image" sync
+          git ls-files -z '*.md' | xargs -0 docker run --rm -v "$PWD:/work" -w /work --network none "$image"

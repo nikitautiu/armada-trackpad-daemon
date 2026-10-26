@@ -5,3 +5,6 @@ __pycache__/
 .ruff_cache/
 dist/
 build/
+.vale/styles/*
+!.vale/styles/config/
+.vale/styles/config/templates/
