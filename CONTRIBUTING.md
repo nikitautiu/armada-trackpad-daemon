@@ -9,7 +9,7 @@ with file:line evidence: check there before assuming how the input stack behaves
 ## Development setup
 
 You need Python 3.12 or newer and [uv](https://docs.astral.sh/uv/). Development happens on any Linux
-host; only the device tests need a supported handheld.
+host. Only the device tests need a supported handheld.
 
 ```sh
 uv sync                                    # the dev environment, with pytest, ruff, mypy and shellcheck
@@ -17,15 +17,20 @@ uv run pytest                              # host tests, shellcheck on every she
 uv run ruff check                          # lint
 uv run ruff format --check src tests dev   # formatting (drop --check to apply it)
 uv run mypy                                # types: src strict, tests typed with relaxed overrides
+scripts/vale.sh sync                       # prose lint styles, once
+scripts/vale.sh                            # Vale on the tracked Markdown files
 ```
 
-CI runs the same four checks on Python 3.12 and 3.14 for every pull request. All of them must pass.
+`scripts/vale.sh` runs [Vale](https://vale.sh) with the [ai-tells](https://github.com/tbhb/vale-ai-tells) style in a
+pinned podman container that mounts only this repository, with network access for `sync` alone.
+
+CI runs the four Python checks on Python 3.12 and 3.14, and Vale, for every pull request. All of them must pass.
 
 ## Runtime constraints
 
 - The daemon is a systemd **user** service. There is no persistent root process: root is used only by
   the one-time root step, `scripts/system-files.sh`, and by the short oneshot units it installs.
-- It reads and writes **no config file**. Settings start from built-in device defaults and change at
+- It doesn't read or write a **config file**. Settings start from built-in device defaults and change at
   runtime over the control socket.
 - Its only runtime dependency is `python-xlib`. The daemon talks to InputPlumber through `busctl`.
 
@@ -35,22 +40,22 @@ ruff (configured in `pyproject.toml`) and mypy enforce most of this.
 
 - Line length 120, double quotes, 4-space indent (`ruff format`).
 - Built-in generics (`list[str]`), `X | None` rather than `Optional`, and the `type` statement for aliases.
-- Type hints on every function and method, including `-> None`; mypy runs in strict mode on `src`.
+- Type hints on every function and method, including `-> None`. mypy runs in strict mode on `src`.
 - No `Any` except for decoded JSON or other wire data, with a comment saying why. Avoid `# noqa` and
   `# type: ignore`; when one is unavoidable, justify it in a comment.
 - Accept abstract inputs (`Sequence`, `Mapping`, `Iterable`) and return concrete types.
 - At most 5 function arguments; beyond that, `# noqa: PLR0913` with a justification.
 - Descriptive names. A leading `_` marks module-private functions and classes.
-- No dead code: no unused imports or variables, no commented-out blocks.
+- Delete dead code: unused imports and variables, commented-out blocks.
 
 ### Design
 
 - Readability first: pick the structure a reader understands fastest.
 - Prefer small functions with one goal that take their inputs as parameters and return their outputs.
   Keep I/O and side effects at the edges, in thin wrappers, so the logic is testable without hardware.
-  `Trackpad`, `Mapper` and `Tracker` are synchronous and do no I/O; only `daemon.py` and `control.py`
+  `Trackpad`, `Mapper` and `Tracker` are synchronous and don't do I/O. Only `daemon.py` and `control.py`
   use asyncio.
-- Model data so that wrong states cannot be represented; avoid loose `dict` or `str` fields.
+- Model data so that wrong states cannot be represented. Avoid loose `dict` or `str` fields.
 - Things that change together live together. There is no shared constants module: each constant lives
   with the code that owns it.
 - Fix problems at their source rather than with special cases at the call sites.
@@ -74,10 +79,10 @@ ruff (configured in `pyproject.toml`) and mypy enforce most of this.
   that way is a design problem.
 - Group tests in classes by concern, and name them `test_<what>_when_<condition>`.
 - Every test, test class, fixture and helper has a docstring. A fixture's docstring says what its data
-  represents and why it has that shape.
+  represents and why it has that structure.
 - One concept per test. Use `pytest.mark.parametrize` instead of copied tests, and `pytest.approx` for
   floats.
-- Use synthetic data with fixed, predictable values; never random data.
+- Use synthetic data with fixed, predictable values, never random data.
 - The shell scripts are tested on the host with faked commands, and the root step installs into a
   scratch tree. They must pass shellcheck as POSIX sh.
 
@@ -135,11 +140,11 @@ A device is a `DeviceProfile` plus the data files that differ from the shared on
 is shared.
 
 1. **The profile.** Add a `DeviceProfile` in `src/armada_trackpad/devices.py` and list it in `DEVICES`:
-   - `id`: a lowercase name such as `vendor-model`; it is also the name of the device's data folder.
+   - `id`: a lowercase name such as `vendor-model`. It is also the name of the device's data folder.
    - `name`: the model's name for people.
    - `touchscreen_name`: a substring of the touchscreen's evdev name, from the `N: Name=` lines of
      `cat /proc/bus/input/devices`. Pick one that matches only the touchscreen.
-   - `panel_mm`: the touch panel's active area, width and height in mm, from the datasheet or measured.
+   - `panel_mm`: the touch panel's active area as width and height in mm. Take it from the datasheet or measure it.
      It scales the pads to the Deck's 32.5 mm, so measure carefully.
    - `devicetree_compatible` (ARM devices: `tr '\0' '\n' < /sys/firmware/devicetree/base/compatible`) or
      `dmi_product_names` (x86 devices: `cat /sys/class/dmi/id/product_name`): what identifies the model.
@@ -151,7 +156,7 @@ is shared.
    - `toggle_chord`: buttons from `chord.BUTTONS` that toggle trackpad mode when all are held. Pick a
      combination that games and streaming clients leave alone (Moonlight quits on
      Select + Start + L1 + R1), or leave it empty.
-   - `x_displays`: gamescope's Xwayland servers; the default fits Armada.
+   - `x_displays`: gamescope's Xwayland servers. The default fits Armada.
 2. **The data folder,** `src/armada_trackpad/data/devices/<id>/`. A file there replaces the shared
    file of the same path in `data/common/`, so add only what differs:
    - `inputplumber/devices.d/49-armada_trackpad_left.yaml` and `..._right.yaml`: copy the Nova's and
@@ -159,9 +164,9 @@ is shared.
      checks that these values are the profile's.
    - `inputplumber/composite`: the profile's `inputplumber_composite` on one line. A test checks that
      they agree.
-   - `system/`: the device's root units and their helpers, if it needs any. Each device carries its
-     own, since a unit is validated only on the device it ships with. The Nova's keyboard unit fixes a
-     race in Armada's controller-type unit; copy it only once you have seen the problem on your device.
+   - `system/`: the device's root units and their helpers, if it needs any. Each device has its
+     own, since a unit is validated only on the device it comes with. The Nova's keyboard unit fixes a
+     race in Armada's controller-type unit. Copy it only once you have seen the problem on your device.
    - `firmware/registers`, only if the touchscreen needs registers rewritten after each resume. The
      firmware helper (`system/firmware.sh`) allows only the Nova's driver (`edt_ft5x06`) and its two
      registers (0x80, 0x85). A new chip needs its own allowlist in the helper, a matching
@@ -169,11 +174,11 @@ is shared.
 3. **The tests.** Most data tests are parametrized over `DEVICES` and cover the new device by
    themselves: the `matches` values and the composite name agree with the profile, the pad configs
    adopt the pad devices by name, the registers lines are well formed, and every file a unit names is
-   shipped once. Add a detection test with your device's `compatible` string or DMI name in
+   installed once. Add a detection test with your device's `compatible` string or DMI name in
    `tests/test_devices.py`.
-4. **On the device.** Run the root step and `tests/device/e2e_hid.py`; it must print `PASS`. Then do
+4. **On the device.** Run the root step and `tests/device/e2e_hid.py`. It must print `PASS`. Then do
    the manual checks under [Device tests](#device-tests).
-5. **The docs.** Add the device to the table in the README and to the changelog.
+5. **The docs.** Add the device to the README's supported note, the table in `docs/usage.md` and the changelog.
 
 ## Commits and pull requests
 

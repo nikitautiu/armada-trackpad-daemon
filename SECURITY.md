@@ -19,13 +19,13 @@ The daemon itself runs as your user. Root is involved only here:
   has changed. It copies InputPlumber configuration to `/etc/inputplumber`, and the device's root units
   and their helpers to `/etc/systemd/system` and `/etc/armada-trackpad`, after checking every unit and
   refusing symlinks.
-- **Two oneshot units on the Retroid Pocket Nova,** run from the root-owned copies in
+- **The oneshot units on the Retroid Pocket Nova,** run from the root-owned copies in
   `/etc/armada-trackpad`, never from your clone, each inside a systemd sandbox:
   - `armada-trackpad-keyboard.service`, at boot and after each InputPlumber restart, restores the
     keyboard output of the device's InputPlumber composite over the system bus.
   - `armada-trackpad-firmware.service`, at boot and after each resume, writes two touchscreen
     registers over i2c. Its helper accepts only the touchscreen's driver and those two registers, and
-    the unit can open no device but the i2c nodes.
+    the unit can't open any device except the i2c nodes.
 
 There is no root daemon, timer or setuid binary. [docs/design.md](docs/design.md#security-model)
 describes the full model, including what the daemon reads and how its control socket is protected.
