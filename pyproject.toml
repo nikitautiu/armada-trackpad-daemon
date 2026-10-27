@@ -1,6 +1,6 @@
 [project]
 name = "armada-trackpad-daemon"
-version = "0.2.0"
+version = "0.2.1"
 description = "Turns a handheld's touchscreen into Steam Deck trackpads for Steam Input on Armada OS"
 readme = "README.md"
 license = "MIT"

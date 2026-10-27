@@ -7,6 +7,8 @@ status ([docs/design.md](docs/design.md#control-protocol), "Versioning"). An ent
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-27
+
 ### Changed
 
 - Nova: the firmware unit sets the touchscreen's touch threshold to 5 (was 35) and its move
@@ -42,5 +44,6 @@ The first public release. Control protocol 1.
   (`--no-firmware` leaves them out).
 - Device support: Retroid Pocket Nova on Armada OS, tested with InputPlumber 0.82 and 0.83.
 
-[Unreleased]: https://github.com/nikitautiu/armada-trackpad-daemon/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/nikitautiu/armada-trackpad-daemon/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/nikitautiu/armada-trackpad-daemon/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/nikitautiu/armada-trackpad-daemon/releases/tag/v0.2.0
