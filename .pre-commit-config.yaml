@@ -1,0 +1,80 @@
+# Set up once per clone, after `uv sync`:
+#   uv run pre-commit install
+# The third-party hooks are pinned by commit. The rest run the versions this repo already pins: ruff, mypy and
+# shellcheck from uv.lock, Vale in the image scripts/vale.sh names (the one CI runs).
+fail_fast: true
+default_stages: [pre-commit]
+default_install_hook_types: [pre-commit, pre-push]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c  # frozen: v6.0.0
+    hooks:
+      # ruff covers the Python checks (syntax, debug statements, builtin literals)
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: check-merge-conflict
+      - id: check-shebang-scripts-are-executable
+      - id: check-toml
+      - id: check-yaml
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: name-tests-test
+        args: [--pytest-test-first]
+        # test helpers and the on-device script, not pytest tests
+        exclude: ^tests/(fakes|device/e2e_hid)\.py$
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --fix
+        language: system
+        types_or: [python, pyi]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types_or: [python, pyi]
+        # the paths CI checks
+        files: ^(src|tests|dev)/
+      # the mypy config picks the files, so mypy checks the whole tree
+      - id: mypy
+        name: mypy
+        entry: uv run mypy
+        language: system
+        types_or: [python, pyi]
+        pass_filenames: false
+      - id: shellcheck
+        name: shellcheck
+        entry: uv run shellcheck
+        language: system
+        types: [shell]
+      # `vale sync` downloads the styles in .vale.ini; the check runs offline
+      - id: vale-sync
+        name: vale sync (styles)
+        entry: scripts/vale.sh
+        args: [sync]
+        language: system
+        types: [markdown]
+        pass_filenames: false
+      - id: vale
+        name: vale (markdown)
+        entry: scripts/vale.sh
+        args: [--output=line]
+        language: system
+        types: [markdown]
+
+      - id: pytest
+        name: pytest
+        stages: [pre-push]
+        entry: uv run pytest
+        language: system
+        pass_filenames: false
+        always_run: true

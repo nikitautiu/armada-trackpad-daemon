@@ -12,13 +12,13 @@ You need Python 3.12 or newer and [uv](https://docs.astral.sh/uv/). Development 
 host. Only the device tests need a supported handheld.
 
 ```sh
-uv sync                                    # the dev environment, with pytest, ruff, mypy and shellcheck
+uv sync                                    # the dev environment, with pytest, ruff, mypy, shellcheck and pre-commit
 uv run pytest                              # host tests, shellcheck on every shell script included
 uv run ruff check                          # lint
 uv run ruff format --check src tests dev   # formatting (drop --check to apply it)
 uv run mypy                                # types: src strict, tests typed with relaxed overrides
-scripts/vale.sh sync                       # prose lint styles, once
-scripts/vale.sh                            # Vale on the tracked Markdown files
+uv run pre-commit install                  # once: checks on each commit, tests on each push
+scripts/vale.sh sync && scripts/vale.sh    # Vale on all tracked Markdown files
 ```
 
 `scripts/vale.sh` runs [Vale](https://vale.sh) with the [ai-tells](https://github.com/tbhb/vale-ai-tells) style in a

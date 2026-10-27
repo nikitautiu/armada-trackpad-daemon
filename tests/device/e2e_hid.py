@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """End-to-end check on a supported device: fake touches in, Steam Deck HID reports out.
 
 Run on the device as the session user, with the installed daemon's venv:

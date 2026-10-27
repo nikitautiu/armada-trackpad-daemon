@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Latency of the pad chain on a supported device: fake touch written, Steam Deck HID report out.
 
 Run on the device as the session user from the checkout, with the installed daemon's venv and
