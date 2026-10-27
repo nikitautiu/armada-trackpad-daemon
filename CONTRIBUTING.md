@@ -18,11 +18,11 @@ uv run ruff check                          # lint
 uv run ruff format --check src tests dev   # formatting (drop --check to apply it)
 uv run mypy                                # types: src strict, tests typed with relaxed overrides
 uv run pre-commit install                  # once: checks on each commit, tests on each push
-scripts/vale.sh sync && scripts/vale.sh    # Vale on all tracked Markdown files
+uv run pre-commit run --all-files          # every check on every file, Vale included
 ```
 
-`scripts/vale.sh` runs [Vale](https://vale.sh) with the [ai-tells](https://github.com/tbhb/vale-ai-tells) style in a
-pinned podman container that mounts only this repository, with network access for `sync` alone.
+The pre-commit hooks lint the Markdown with [Vale](https://vale.sh) and the
+[ai-tells](https://github.com/tbhb/vale-ai-tells) style. pre-commit installs Vale from PyPI on first use.
 
 CI runs the four Python checks on Python 3.12 and 3.14, and Vale, for every pull request. All of them must pass.
 

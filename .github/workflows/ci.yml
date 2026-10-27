@@ -39,9 +39,9 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      # The image scripts/vale.sh runs locally; styles come from the Packages URL in .vale.ini.
-      - name: Vale
-        run: |
-          image="$(sed -n 's/^IMAGE="\(.*\)"$/\1/p' scripts/vale.sh)"
-          docker run --rm -v "$PWD:/work" -w /work "$image" sync
-          git ls-files -z '*.md' | xargs -0 docker run --rm -v "$PWD:/work" -w /work --network none "$image"
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          python-version: "3.14"
+      # The pre-commit hooks, so CI runs the same Vale as a commit does.
+      - run: uv run --locked pre-commit run vale-sync --all-files
+      - run: uv run --locked pre-commit run vale --all-files

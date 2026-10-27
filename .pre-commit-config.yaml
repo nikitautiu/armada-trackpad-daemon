@@ -1,7 +1,7 @@
 # Set up once per clone, after `uv sync`:
 #   uv run pre-commit install
 # The third-party hooks are pinned by commit. The rest run the versions this repo already pins: ruff, mypy and
-# shellcheck from uv.lock, Vale in the image scripts/vale.sh names (the one CI runs).
+# shellcheck from uv.lock. Vale comes from PyPI (see its hooks).
 fail_fast: true
 default_stages: [pre-commit]
 default_install_hook_types: [pre-commit, pre-push]
@@ -56,19 +56,25 @@ repos:
         entry: uv run shellcheck
         language: system
         types: [shell]
-      # `vale sync` downloads the styles in .vale.ini; the check runs offline
+      # Vale from its PyPI package, which downloads the release binary on first run.
+      # TODO: switch to the upstream hook (repo: https://github.com/vale-cli/vale) once pre-commit can install it.
+      #   That hook is `language: golang`, so pre-commit builds Vale from source. Without Go on the host it
+      #   downloads a Go toolchain from dl.google.com/go/, which returns 404 (pre-commit 4.7.0).
+      # `vale sync` downloads the styles in .vale.ini
       - id: vale-sync
         name: vale sync (styles)
-        entry: scripts/vale.sh
+        entry: vale
         args: [sync]
-        language: system
+        language: python
+        additional_dependencies: [vale==3.24.0.0]
         types: [markdown]
         pass_filenames: false
       - id: vale
         name: vale (markdown)
-        entry: scripts/vale.sh
+        entry: vale
         args: [--output=line]
-        language: system
+        language: python
+        additional_dependencies: [vale==3.24.0.0]
         types: [markdown]
 
       - id: pytest
