@@ -196,9 +196,9 @@ class TestFirmwareData:
     """The touchscreen registers each device rewrites at boot and after every resume."""
 
     def test_nova_sets_the_touch_and_move_thresholds(self) -> None:
-        """The Nova writes the edt_ft5x06 touch threshold (0x80) to 35 and the move threshold (0x85) to 64."""
+        """The Nova writes the edt_ft5x06 touch threshold (0x80) to 5 and the move threshold (0x85) to 1."""
         text = (devices.data_dir("retroid-pocket-nova") / "firmware/registers").read_text()
-        assert _register_lines(text) == ["edt_ft5x06 0x80 35", "edt_ft5x06 0x85 64"]
+        assert _register_lines(text) == ["edt_ft5x06 0x80 5", "edt_ft5x06 0x85 1"]
 
     def test_every_register_line_is_well_formed(self) -> None:
         """Each line of a device's registers file is one the firmware helper accepts."""

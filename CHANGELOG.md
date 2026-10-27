@@ -7,6 +7,13 @@ status ([docs/design.md](docs/design.md#control-protocol), "Versioning"). An ent
 
 ## [Unreleased]
 
+### Changed
+
+- Nova: the firmware unit sets the touchscreen's touch threshold to 5 (was 35) and its move
+  threshold to 1 (was 64). A swipe starts moving after the panel's own floor of 17-25 ms instead of
+  about 25 ms, light touches register sooner, and power use is unchanged. Rerun
+  `sudo ./scripts/system-files.sh install` to apply it.
+
 ## [0.2.0] - 2026-10-25
 
 The first public release. Control protocol 1.

@@ -6,7 +6,7 @@
 #   firmware.sh REGISTERS
 #   firmware.sh --check REGISTERS
 #
-# REGISTERS has one "DRIVER REGISTER VALUE" line per register, such as "edt_ft5x06 0x85 64": the
+# REGISTERS has one "DRIVER REGISTER VALUE" line per register, such as "edt_ft5x06 0x85 1": the
 # register gets the value, a byte, on the one i2c device bound to DRIVER. "#" starts a comment line.
 # The script always exits 0, so it never fails a boot or a resume; problems are logged as warnings.
 # --check only validates REGISTERS, and exits 1 if the helper would refuse it; the root step runs it

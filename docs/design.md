@@ -433,17 +433,18 @@ Uninstall removes the InputPlumber files of every device and the shared ones, re
 
 ### Touch threshold (Nova)
 
-`devices/retroid-pocket-nova/firmware/registers` sets register 0x80 to 35, from the firmware's 50, with the [firmware unit](#touchscreen-firmware-nova).
+`devices/retroid-pocket-nova/firmware/registers` sets register 0x80 to 5, from the firmware's 50, with the [firmware unit](#touchscreen-firmware-nova).
 - **Panel:** a FocalTech FT5452 on i2c `1-0038`. Chip ID registers 0xA3/0x9F = 0x54/0x52, and Retroid's own Nova device tree says `focaltech,ft5452`. Armada's says `focaltech,ft5426`, so `edt_ft5x06` runs it as `GENERIC_FT`.
 - **Register:** the sysfs `threshold` attribute for `GENERIC_FT` is register 0x80, the touch-detect threshold (mainline `edt-ft5x06.c`, `EDT_ATTR(threshold, ...)` with `M09_REGISTER_THRESHOLD`).
-- **A raw write, not the sysfs attribute,** so every register is in one place: on a power-off resume, `edt_ft5x06_restore_reg_parameters` writes the driver's cached `threshold` back to 0x80, so the register is at the firmware's 50 for the ~0.4 s until the firmware unit writes 35 again. The sysfs `threshold` attribute keeps showing the driver's cache, 50, not the register.
-- **Why 35:** light touches register sooner than at the firmware's 50. Measured on the Nova: taps register slightly longer (p50 99 vs 82 ms), and no ghost touches appeared.
+- **A raw write, not the sysfs attribute,** so every register is in one place: on a power-off resume, `edt_ft5x06_restore_reg_parameters` writes the driver's cached `threshold` back to 0x80, so the register is at the firmware's 50 for the ~0.4 s until the firmware unit writes 5 again. The sysfs `threshold` attribute keeps showing the driver's cache, 50, not the register.
+- **Why 5:** light touches register sooner than at the firmware's 50. With nothing on the panel, the Nova's touch interrupt count stays at 0 at both 5 and 50.
 - The touch-down motion hold (0x85, move threshold) has no sysfs attribute: see [Touchscreen firmware](#touchscreen-firmware-nova).
 
 ### Touchscreen firmware (Nova)
 
-`devices/retroid-pocket-nova/firmware/registers` sets two registers of the FT5452: 0x80, the touch threshold, to 35 ([Touch threshold](#touch-threshold-nova)), and 0x85, the move threshold (THDIFF), to 64, from the firmware's 128.
-- **Why 64:** at common swipe speeds it halves the touch-down hold, 50 → 25 ms. Slow moves are rougher with it, so it is meant for Steam Input's smoothing lowered and acceleration off, as the Steam Input setup in [usage.md](usage.md#steam-input-setup) says.
+`devices/retroid-pocket-nova/firmware/registers` sets two registers of the FT5452: 0x80, the touch threshold, to 5 ([Touch threshold](#touch-threshold-nova)), and 0x85, the move threshold (THDIFF), to 1, from the firmware's 128.
+- **Why 1:** after a touch-down the panel holds motion back until the finger has moved a set distance, then sends it in one jump. 0x85 sets that distance. At 128 the hold is about 50 ms at common swipe speeds, at 64 about 25 ms. At 1 a swipe starts moving after the panel's own floor of 2-3 reports (17-25 ms), and fast swipes as soon as 8 ms. A finger at rest shows no more jitter than at 128. It is meant for Steam Input's smoothing lowered and acceleration off, as the Steam Input setup in [usage.md](usage.md#steam-input-setup) says.
+- **Power:** in a game, 5 and 1 measured the same as 50 and 128 (4.76 vs 4.82 W, within the sample spread).
 - **Why it is lost:** the driver has no attribute for 0x85. It is written raw over i2c, and the driver doesn't restore it. The Nova's device tree has `reset-gpios`, so `edt_ft5x06` uses `EDT_PMODE_POWEROFF`: every suspend (the Nova suspends to idle) asserts reset and cuts the controller's power. Resume (`edt_ft5x06_restore_reg_parameters`, after a 300 ms settle) writes back only 0x80, 0x92 and 0x93. A reboot resets the chip too. So 0x85 needs a write at boot and after every resume, and 0x80 too once the driver's cache is not ours.
 - **Why it is a system unit:** `/usr` is read-only (bootc), `/usr/lib/systemd/system-sleep` holds the OS's own hooks and `/etc/systemd/system-sleep` does not exist. `/etc/systemd/system` is read on every boot.
 - **The unit,** `armada-trackpad-firmware.service`:
@@ -454,7 +455,7 @@ Uninstall removes the InputPlumber files of every device and the shared ones, re
   - checks every line first. A line must have the driver `edt_ft5x06`, the register `0x80` or `0x85` and a decimal value 0..255. Any other driver or register is refused. The file cannot make root write to another chip or register, and a bad line stops all writes. The root step runs the same check (`firmware.sh --check`) before it installs anything. A bad file then stops the install instead;
   - finds the controller from the driver binding rather than a fixed bus: the one `<bus>-<addr>` entry in `/sys/bus/i2c/drivers/<driver>/`, with its `/dev/i2c-<bus>` (i2c-dev). It waits up to 10 s for them at boot, and writes nothing if several devices are bound;
   - waits 0.3 s (the driver's settle), then reads the register. It writes it with `/usr/bin/i2cset -f -y <bus> <addr> <register> <value> b` and reads it back with `/usr/bin/i2cget -f -y <bus> <addr> <register> b`, up to 5 tries 0.2 s apart. `-f` is needed because the driver has claimed the address; each call is one SMBus byte transfer, which does not race the driver's own reads;
-  - logs what it did to the journal (`1-0038 (edt_ft5x06): 0x85 0x80 -> 0x40`) and logs problems as warnings. It always exits 0, so it never fails a boot or a resume. Logs: `journalctl -u armada-trackpad-firmware`.
+  - logs what it did to the journal (`1-0038 (edt_ft5x06): 0x85 0x80 -> 0x01`) and logs problems as warnings. It always exits 0, so it never fails a boot or a resume. Logs: `journalctl -u armada-trackpad-firmware`.
 - **Why `/etc/armada-trackpad`:** a root unit must not run anything the user can change. For this reason the helper and its data are root-owned copies and never the checkout in the user's home. `/etc` is the tree Armada documents as writable and kept across image updates; `/usr/local` on a bootc system is a link into `/var`, which was not checked on Armada. Every other file of the root step is in `/etc` too.
 
 ### Keyboard output
@@ -470,7 +471,7 @@ Keys InputPlumber owns, such as volume up on the Nova, need the keyboard output 
 - **No persistent root:** the daemon runs as the session user. Root is used once, by the user, to copy static files into `/etc/inputplumber`, `/etc/armada-trackpad` and `/etc/systemd/system`; the two root oneshots it installs run for a moment at boot, after each resume and after each InputPlumber restart. There are no root daemons, timers or setuid binaries.
   - **The root step runs code from the checkout it is started from:** `system-files.sh` itself, device detection (`devices.py`) and the registers check (`firmware.sh --check`), and it copies the units, helpers and data from there. Run it from a fresh clone or a release tag, never from a checkout someone else could have changed.
   - Afterwards the root oneshots run, both as root, from the root-owned copies in `/etc/armada-trackpad`; neither talks to a user process, file or socket.
-  - The firmware oneshot ([Touchscreen firmware](#touchscreen-firmware-nova)) writes the touchscreen registers, for about a second at boot and after each resume. It reads only its registers file and sysfs. Its commands, each argument validated (bus and address from the driver binding, driver and register from an allowlist, value from the file): `/usr/bin/i2cget -f -y <bus> <addr> <register> b`, `/usr/bin/i2cset -f -y <bus> <addr> <register> <value> b`, and `sleep`. On the Nova: `i2cset -f -y 1 0x38 0x85 64 b`.
+  - The firmware oneshot ([Touchscreen firmware](#touchscreen-firmware-nova)) writes the touchscreen registers, for about a second at boot and after each resume. It reads only its registers file and sysfs. Its commands, each argument validated (bus and address from the driver binding, driver and register from an allowlist, value from the file): `/usr/bin/i2cget -f -y <bus> <addr> <register> b`, `/usr/bin/i2cset -f -y <bus> <addr> <register> <value> b`, and `sleep`. On the Nova: `i2cset -f -y 1 0x38 0x85 1 b`.
   - The keyboard oneshot ([Keyboard output](#keyboard-output)) runs at boot and after each InputPlumber restart. It reads its `composite` file, reads the composite's outputs over the system bus, and when the keyboard output is missing runs Armada's `controller-type get` and calls InputPlumber's `SetTargetDevices`.
 - **Socket access:** the socket is in the user's runtime dir with mode 0600. Only the user (and root) can talk to the daemon. A client such as a Decky plugin's backend runs as that user.
   - Socket input is validated against the request format and then the settings schema, with a line size limit.
@@ -500,6 +501,6 @@ Keys InputPlumber owns, such as volume up on the Nova, need the keyboard output 
   - both pads;
   - haptics;
   - live `set`;
-  - suspend/resume, after which `sudo i2cget -f -y 1 0x38 0x85 b` reads `0x40` and `journalctl -u armada-trackpad-firmware -b` shows a run for the resume;
+  - suspend/resume, after which `sudo i2cget -f -y 1 0x38 0x85 b` reads `0x01` and `journalctl -u armada-trackpad-firmware -b` shows a run for the resume;
   - an InputPlumber restart;
   - a controller-type switch.
